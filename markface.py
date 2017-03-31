@@ -5,50 +5,31 @@
 @author: Silence
 '''
 import os
-from flask import Flask, request, url_for, send_from_directory,render_template
-from werkzeug.utils import secure_filename
-
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg', 'gif'])
+from flask import Flask, request,send_file
+from flask_uploads import UploadSet, configure_uploads, IMAGES,\
+ patch_request_class
+import tool_output_landmarks_image
+import time
 
 app = Flask(__name__)
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024
+app.config['UPLOADED_PHOTOS_DEST'] = 'static/uploads'  # 文件储存地址
+
+photos = UploadSet('photos', IMAGES)
+configure_uploads(app, photos)
+patch_request_class(app)  # 文件大小限制，默认为16MB
 
 
-html = '''
-    <!DOCTYPE html>
-    <title>Upload File</title>
-    <h1>图片上传</h1>
-    <form method=post enctype=multipart/form-data>
-         <input type=file name=file>
-         <input type=submit value=上传>
-    </form>
-    '''
-
-
-def allowed_file(filename):
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
-
-
-@app.route('/uploads/<filename>')
-def uploaded_file(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'],
-                               filename)
-
-
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['POST'])
 def upload_file():
-    if request.method == 'POST':
-        file = request.files['file']
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            file_url = url_for('uploaded_file', filename=filename)
-            return html + '<br><img src=' + file_url + '>'
-    return render_template('up.html')
+    if 'photo' in request.files:
+        filename = photos.save(request.files['photo'])
+        file_url = photos.url(filename)
 
-#111
+        tool_output_landmarks_image.main('static/uploads/'+filename,'static/markface/'+filename)
+
+        return send_file('static/markface/'+filename, mimetype='image/jpg')
+
+
 
 if __name__ == '__main__':
     app.run()
