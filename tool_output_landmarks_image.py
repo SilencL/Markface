@@ -74,15 +74,12 @@ def main(img,path):
     dealimg,landmarks = read_im_and_landmarks(img)
     fuseimg = annote_landmarks(dealimg,landmarks)
 
-    a, b = img.split('.')
-    print a,b
-    newName = path + b
 
-    return cv2.imwrite(newName, fuseimg)
+    return cv2.imwrite(path, fuseimg)
 
 if __name__ == '__main__':
 
-    main('static/uploads/82-1 TS_s_zoom_gray_his.jpg', 'static/markface')
+    main('static/uploads/267-1 TS_s.jpg', 'static/markface/267-1 TS_s.jpg')
     # outputLandmarksImage(r'F:\image\imageData\positive\front\pre\his\*.jpg')
 
     # path = r'F:\image\imageData3\positive\front\pre\his\*.jpg'
